@@ -1,0 +1,45 @@
+# azure-pipelines.yaml
+trigger:
+  branches:
+    include:
+      - main  # Change to your branch name if needed
+
+pool:
+  vmImage: 'ubuntu-latest'  # Use the latest Ubuntu image
+
+variables:
+  pythonVersion: '3.9'  # Specify the Python version you need
+
+stages:
+  - stage: Build
+    jobs:
+      - job: Build
+        steps:
+          - checkout: self  # Check out the code
+          
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '$(pythonVersion)'
+              addToPath: true
+
+          - script: |
+              python -m pip install --upgrade pip
+              pip install -r requirements.txt  # Install dependencies
+            displayName: 'Install dependencies'
+
+          - script: |
+              python -m unittest discover tests  # Run your tests
+            displayName: 'Run tests'
+
+  - stage: Deploy
+    dependsOn: Build
+    condition: succeeded()  # Only deploy if the build stage succeeded
+    jobs:  
+      - job: Deploy
+        steps:
+          - checkout: self  # Check out the code again
+
+          - script: |
+              echo "Deploying to your environment..."
+              # Add your deployment commands here, e.g., Azure CLI commands
+            displayName: 'Deploy Application'
